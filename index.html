@@ -1,0 +1,668 @@
+import React, { useState, useEffect } from 'react';
+import { Plus, BookOpen, Users, Play, Check, X, Edit, Trash2, ArrowLeft, Brain, Shuffle, PenTool } from 'lucide-react';
+
+const JapaneseVocabApp = () => {
+  const [currentView, setCurrentView] = useState('home');
+  const [words, setWords] = useState([
+    { id: 1, japanese: '犬', reading: 'いぬ', english: 'dog', group: 'Animals' },
+    { id: 2, japanese: '猫', reading: 'ねこ', english: 'cat', group: 'Animals' },
+    { id: 3, japanese: '水', reading: 'みず', english: 'water', group: 'Basic' },
+    { id: 4, japanese: '食べる', reading: 'たべる', english: 'to eat', group: 'Verbs' },
+    { id: 5, japanese: '本', reading: 'ほん', english: 'book', group: 'Basic' },
+    { id: 6, japanese: '走る', reading: 'はしる', english: 'to run', group: 'Verbs' },
+    { id: 7, japanese: '魚', reading: 'さかな', english: 'fish', group: 'Animals' },
+    { id: 8, japanese: '車', reading: 'くるま', english: 'car', group: 'Basic' }
+  ]);
+  const [groups, setGroups] = useState(['Animals', 'Basic', 'Verbs']);
+  const [selectedGroup, setSelectedGroup] = useState('');
+  const [quizType, setQuizType] = useState('flashcard');
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [showAnswer, setShowAnswer] = useState(false);
+  const [studyWords, setStudyWords] = useState([]);
+  const [currentChoices, setCurrentChoices] = useState([]);
+  const [userAnswer, setUserAnswer] = useState('');
+  const [showResult, setShowResult] = useState(false);
+  const [isCorrect, setIsCorrect] = useState(false);
+  const [score, setScore] = useState({ correct: 0, total: 0 });
+  const [newWord, setNewWord] = useState({ japanese: '', reading: '', english: '', group: '' });
+  const [editingWord, setEditingWord] = useState(null);
+  const [newGroupName, setNewGroupName] = useState('');
+
+  // Get unique groups from words
+  useEffect(() => {
+    const uniqueGroups = [...new Set(words.map(word => word.group))];
+    setGroups(uniqueGroups);
+  }, [words]);
+
+  const addWord = () => {
+    if (newWord.japanese && newWord.reading && newWord.english && newWord.group) {
+      const word = {
+        id: Date.now(),
+        ...newWord
+      };
+      setWords([...words, word]);
+      setNewWord({ japanese: '', reading: '', english: '', group: '' });
+      setCurrentView('home');
+    }
+  };
+
+  const updateWord = () => {
+    if (editingWord && newWord.japanese && newWord.reading && newWord.english && newWord.group) {
+      setWords(words.map(word => 
+        word.id === editingWord.id ? { ...editingWord, ...newWord } : word
+      ));
+      setEditingWord(null);
+      setNewWord({ japanese: '', reading: '', english: '', group: '' });
+      setCurrentView('home');
+    }
+  };
+
+  const deleteWord = (id) => {
+    setWords(words.filter(word => word.id !== id));
+  };
+
+  const startEdit = (word) => {
+    setEditingWord(word);
+    setNewWord({
+      japanese: word.japanese,
+      reading: word.reading,
+      english: word.english,
+      group: word.group
+    });
+    setCurrentView('add');
+  };
+
+  const generateChoices = (correctWord, allWords) => {
+    const otherWords = allWords.filter(w => w.id !== correctWord.id);
+    const shuffled = otherWords.sort(() => Math.random() - 0.5);
+    const choices = shuffled.slice(0, 3);
+    choices.push(correctWord);
+    return choices.sort(() => Math.random() - 0.5);
+  };
+
+  const startQuiz = (group, type) => {
+    let wordsToStudy = [];
+    
+    if (group === 'random') {
+      // Random words from all groups
+      const shuffled = [...words].sort(() => Math.random() - 0.5);
+      wordsToStudy = shuffled.slice(0, Math.min(10, words.length));
+    } else {
+      wordsToStudy = words.filter(word => word.group === group);
+    }
+    
+    if (wordsToStudy.length > 0) {
+      setStudyWords(wordsToStudy.sort(() => Math.random() - 0.5));
+      setCurrentWordIndex(0);
+      setQuizType(type);
+      setSelectedGroup(group);
+      setShowAnswer(false);
+      setShowResult(false);
+      setUserAnswer('');
+      setScore({ correct: 0, total: 0 });
+      
+      if (type === 'multiple-choice') {
+        setCurrentChoices(generateChoices(wordsToStudy[0], words));
+      }
+      
+      setCurrentView('quiz');
+    }
+  };
+
+  const checkAnswer = (selectedAnswer) => {
+    const currentWord = studyWords[currentWordIndex];
+    let correct = false;
+    
+    if (quizType === 'multiple-choice') {
+      correct = selectedAnswer === currentWord.english;
+    } else if (quizType === 'write-translation') {
+      correct = userAnswer.toLowerCase().trim() === currentWord.english.toLowerCase().trim();
+    }
+    
+    setIsCorrect(correct);
+    setShowResult(true);
+    setScore(prev => ({
+      correct: prev.correct + (correct ? 1 : 0),
+      total: prev.total + 1
+    }));
+  };
+
+  const nextQuestion = () => {
+    if (currentWordIndex < studyWords.length - 1) {
+      const nextIndex = currentWordIndex + 1;
+      setCurrentWordIndex(nextIndex);
+      setShowAnswer(false);
+      setShowResult(false);
+      setUserAnswer('');
+      
+      if (quizType === 'multiple-choice') {
+        setCurrentChoices(generateChoices(studyWords[nextIndex], words));
+      }
+    } else {
+      setCurrentView('quiz-complete');
+    }
+  };
+
+  const renderHome = () => (
+    <div className="max-w-md mx-auto bg-white min-h-screen">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-b-3xl">
+        <h1 className="text-2xl font-bold text-center">Japanese Vocab</h1>
+        <p className="text-center opacity-90 mt-2">Learn with different quiz types</p>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="p-4 grid grid-cols-2 gap-4">
+        <button
+          onClick={() => setCurrentView('add')}
+          className="bg-green-500 text-white p-4 rounded-2xl flex flex-col items-center gap-2 shadow-lg active:scale-95 transition-transform"
+        >
+          <Plus size={24} />
+          <span className="font-semibold">Add Word</span>
+        </button>
+        
+        <button
+          onClick={() => setCurrentView('study-options')}
+          className="bg-blue-500 text-white p-4 rounded-2xl flex flex-col items-center gap-2 shadow-lg active:scale-95 transition-transform"
+        >
+          <Brain size={24} />
+          <span className="font-semibold">Start Quiz</span>
+        </button>
+      </div>
+
+      {/* Random Quiz Button */}
+      <div className="p-4">
+        <button
+          onClick={() => setCurrentView('quiz-type-random')}
+          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 rounded-2xl flex items-center justify-center gap-3 shadow-lg active:scale-95 transition-transform"
+        >
+          <Shuffle size={24} />
+          <span className="font-bold text-lg">Random Quiz (All Groups)</span>
+        </button>
+      </div>
+
+      {/* Groups Overview */}
+      <div className="p-4">
+        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <Users size={20} />
+          Study Groups
+        </h2>
+        <div className="grid gap-3">
+          {groups.map(group => {
+            const groupWords = words.filter(word => word.group === group);
+            return (
+              <button
+                key={group}
+                onClick={() => {
+                  setSelectedGroup(group);
+                  setCurrentView('quiz-type-select');
+                }}
+                className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-2xl text-left hover:from-blue-50 hover:to-purple-50 transition-colors border border-gray-200"
+              >
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="font-bold text-gray-800 text-lg">{group}</h3>
+                    <p className="text-gray-600">{groupWords.length} words</p>
+                  </div>
+                  <div className="text-2xl">
+                    {group === 'Animals' ? '🐱' : group === 'Basic' ? '📚' : '🏃‍♂️'}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Recent Words */}
+      <div className="p-4">
+        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <BookOpen size={20} />
+          Your Words ({words.length})
+        </h2>
+        <div className="space-y-3 max-h-96 overflow-y-auto">
+          {words.slice(-5).reverse().map(word => (
+            <div key={word.id} className="bg-gray-50 p-4 rounded-2xl">
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <div className="text-2xl font-bold text-gray-800">{word.japanese}</div>
+                  <div className="text-gray-600">{word.reading}</div>
+                  <div className="text-gray-700 font-medium">{word.english}</div>
+                  <div className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full inline-block mt-2">
+                    {word.group}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => startEdit(word)}
+                    className="text-blue-500 p-2 hover:bg-blue-100 rounded-full"
+                  >
+                    <Edit size={16} />
+                  </button>
+                  <button
+                    onClick={() => deleteWord(word.id)}
+                    className="text-red-500 p-2 hover:bg-red-100 rounded-full"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderQuizTypeSelect = () => (
+    <div className="max-w-md mx-auto bg-white min-h-screen">
+      <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-b-3xl">
+        <button
+          onClick={() => setCurrentView('home')}
+          className="mb-4 p-2 hover:bg-white/20 rounded-full"
+        >
+          <ArrowLeft size={20} />
+        </button>
+        <h1 className="text-2xl font-bold">Choose Quiz Type</h1>
+        <p className="opacity-90 mt-2">
+          {selectedGroup === 'random' ? 'Random words from all groups' : `Group: ${selectedGroup}`}
+        </p>
+      </div>
+
+      <div className="p-6 space-y-4">
+        <button
+          onClick={() => startQuiz(selectedGroup, 'flashcard')}
+          className="w-full bg-gradient-to-r from-orange-400 to-red-500 text-white p-6 rounded-2xl text-left shadow-lg active:scale-95 transition-transform"
+        >
+          <div className="flex items-center gap-4">
+            <BookOpen size={32} />
+            <div>
+              <h3 className="text-xl font-bold">Flashcards</h3>
+              <p className="text-sm opacity-90">See Japanese → Reveal English</p>
+            </div>
+          </div>
+        </button>
+
+        <button
+          onClick={() => startQuiz(selectedGroup, 'multiple-choice')}
+          className="w-full bg-gradient-to-r from-green-400 to-blue-500 text-white p-6 rounded-2xl text-left shadow-lg active:scale-95 transition-transform"
+        >
+          <div className="flex items-center gap-4">
+            <Users size={32} />
+            <div>
+              <h3 className="text-xl font-bold">Multiple Choice</h3>
+              <p className="text-sm opacity-90">Choose the correct translation</p>
+            </div>
+          </div>
+        </button>
+
+        <button
+          onClick={() => startQuiz(selectedGroup, 'write-translation')}
+          className="w-full bg-gradient-to-r from-purple-400 to-pink-500 text-white p-6 rounded-2xl text-left shadow-lg active:scale-95 transition-transform"
+        >
+          <div className="flex items-center gap-4">
+            <PenTool size={32} />
+            <div>
+              <h3 className="text-xl font-bold">Write Translation</h3>
+              <p className="text-sm opacity-90">Type the English meaning</p>
+            </div>
+          </div>
+        </button>
+
+        <button
+          onClick={() => startQuiz(selectedGroup, 'mixed')}
+          className="w-full bg-gradient-to-r from-indigo-400 to-purple-600 text-white p-6 rounded-2xl text-left shadow-lg active:scale-95 transition-transform"
+        >
+          <div className="flex items-center gap-4">
+            <Shuffle size={32} />
+            <div>
+              <h3 className="text-xl font-bold">Mixed Quiz</h3>
+              <p className="text-sm opacity-90">Random mix of all quiz types</p>
+            </div>
+          </div>
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderQuiz = () => {
+    if (studyWords.length === 0) return null;
+    
+    const currentWord = studyWords[currentWordIndex];
+    const currentQuizType = quizType === 'mixed' 
+      ? ['flashcard', 'multiple-choice', 'write-translation'][currentWordIndex % 3]
+      : quizType;
+    
+    return (
+      <div className="max-w-md mx-auto bg-white min-h-screen">
+        <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-6 rounded-b-3xl">
+          <button
+            onClick={() => setCurrentView('home')}
+            className="mb-4 p-2 hover:bg-white/20 rounded-full"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-xl font-bold">
+                {currentQuizType === 'flashcard' ? '🔄 Flashcard' :
+                 currentQuizType === 'multiple-choice' ? '🎯 Multiple Choice' :
+                 currentQuizType === 'write-translation' ? '✍️ Write Translation' : '🎯 Quiz'}
+              </h1>
+              <p className="text-sm opacity-90">
+                {selectedGroup === 'random' ? 'Random Quiz' : selectedGroup}
+              </p>
+            </div>
+            <div className="text-right">
+              <div className="bg-white/20 px-3 py-1 rounded-full text-sm">
+                {currentWordIndex + 1}/{studyWords.length}
+              </div>
+              <div className="text-xs mt-1">
+                Score: {score.correct}/{score.total}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6">
+          {/* Question */}
+          <div className="bg-gray-50 p-6 rounded-3xl mb-6 text-center">
+            <div className="text-5xl font-bold text-gray-800 mb-3">
+              {currentWord.japanese}
+            </div>
+            <div className="text-2xl text-gray-600">
+              {currentWord.reading}
+            </div>
+          </div>
+
+          {/* Flashcard Mode */}
+          {currentQuizType === 'flashcard' && (
+            <div className="space-y-4">
+              {!showAnswer ? (
+                <button
+                  onClick={() => setShowAnswer(true)}
+                  className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white p-4 rounded-2xl font-bold text-xl active:scale-95 transition-transform"
+                >
+                  Show Answer
+                </button>
+              ) : (
+                <div className="space-y-4">
+                  <div className="bg-blue-50 p-4 rounded-2xl text-center">
+                    <div className="text-2xl font-bold text-blue-800">
+                      {currentWord.english}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={nextQuestion}
+                      className="bg-red-500 text-white p-3 rounded-xl font-semibold active:scale-95 transition-transform"
+                    >
+                      ❌ Incorrect
+                    </button>
+                    <button
+                      onClick={() => {
+                        setScore(prev => ({ ...prev, correct: prev.correct + 1, total: prev.total + 1 }));
+                        nextQuestion();
+                      }}
+                      className="bg-green-500 text-white p-3 rounded-xl font-semibold active:scale-95 transition-transform"
+                    >
+                      ✅ Correct
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Multiple Choice Mode */}
+          {currentQuizType === 'multiple-choice' && (
+            <div className="space-y-3">
+              {!showResult ? (
+                <>
+                  <p className="text-center text-gray-600 mb-4">Choose the correct translation:</p>
+                  {currentChoices.map((choice, index) => (
+                    <button
+                      key={index}
+                      onClick={() => checkAnswer(choice.english)}
+                      className="w-full bg-gray-100 hover:bg-gray-200 p-4 rounded-xl text-left font-medium active:scale-95 transition-transform"
+                    >
+                      {choice.english}
+                    </button>
+                  ))}
+                </>
+              ) : (
+                <div className="space-y-4">
+                  <div className={`p-4 rounded-2xl text-center ${isCorrect ? 'bg-green-100' : 'bg-red-100'}`}>
+                    <div className={`text-xl font-bold ${isCorrect ? 'text-green-800' : 'text-red-800'}`}>
+                      {isCorrect ? '✅ Correct!' : '❌ Incorrect'}
+                    </div>
+                    <div className="text-lg mt-2 text-gray-700">
+                      Answer: <strong>{currentWord.english}</strong>
+                    </div>
+                  </div>
+                  <button
+                    onClick={nextQuestion}
+                    className="w-full bg-blue-500 text-white p-3 rounded-xl font-semibold active:scale-95 transition-transform"
+                  >
+                    Next Question
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Write Translation Mode */}
+          {currentQuizType === 'write-translation' && (
+            <div className="space-y-4">
+              {!showResult ? (
+                <>
+                  <p className="text-center text-gray-600 mb-4">Write the English translation:</p>
+                  <input
+                    type="text"
+                    value={userAnswer}
+                    onChange={(e) => setUserAnswer(e.target.value)}
+                    className="w-full p-4 text-lg border-2 border-gray-300 rounded-2xl focus:border-blue-500 focus:outline-none"
+                    placeholder="Type your answer here..."
+                    onKeyPress={(e) => e.key === 'Enter' && userAnswer.trim() && checkAnswer()}
+                  />
+                  <button
+                    onClick={() => checkAnswer()}
+                    disabled={!userAnswer.trim()}
+                    className="w-full bg-blue-500 text-white p-3 rounded-xl font-semibold active:scale-95 transition-transform disabled:opacity-50 disabled:scale-100"
+                  >
+                    Check Answer
+                  </button>
+                </>
+              ) : (
+                <div className="space-y-4">
+                  <div className={`p-4 rounded-2xl text-center ${isCorrect ? 'bg-green-100' : 'bg-red-100'}`}>
+                    <div className={`text-xl font-bold ${isCorrect ? 'text-green-800' : 'text-red-800'}`}>
+                      {isCorrect ? '✅ Correct!' : '❌ Incorrect'}
+                    </div>
+                    <div className="text-lg mt-2 text-gray-700">
+                      Your answer: <strong>{userAnswer}</strong>
+                    </div>
+                    <div className="text-lg text-gray-700">
+                      Correct answer: <strong>{currentWord.english}</strong>
+                    </div>
+                  </div>
+                  <button
+                    onClick={nextQuestion}
+                    className="w-full bg-blue-500 text-white p-3 rounded-xl font-semibold active:scale-95 transition-transform"
+                  >
+                    Next Question
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderQuizComplete = () => {
+    const percentage = score.total > 0 ? Math.round((score.correct / score.total) * 100) : 0;
+    
+    return (
+      <div className="max-w-md mx-auto bg-white min-h-screen">
+        <div className="bg-gradient-to-r from-green-500 to-blue-500 text-white p-6 rounded-b-3xl">
+          <h1 className="text-2xl font-bold text-center">Quiz Complete! 🎉</h1>
+        </div>
+
+        <div className="p-8 text-center">
+          <div className="bg-gray-50 p-8 rounded-3xl mb-8">
+            <div className="text-6xl mb-4">
+              {percentage >= 80 ? '🌟' : percentage >= 60 ? '👍' : '📚'}
+            </div>
+            <div className="text-4xl font-bold text-gray-800 mb-2">
+              {percentage}%
+            </div>
+            <div className="text-xl text-gray-600 mb-4">
+              {score.correct} out of {score.total} correct
+            </div>
+            <div className="text-lg text-gray-700">
+              {percentage >= 80 ? 'Excellent work!' :
+               percentage >= 60 ? 'Good job!' :
+               'Keep practicing!'}
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <button
+              onClick={() => startQuiz(selectedGroup, quizType)}
+              className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white p-4 rounded-2xl font-bold text-lg active:scale-95 transition-transform"
+            >
+              Try Again
+            </button>
+            <button
+              onClick={() => setCurrentView('home')}
+              className="w-full bg-gray-500 text-white p-4 rounded-2xl font-bold text-lg active:scale-95 transition-transform"
+            >
+              Back to Home
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderAddWord = () => (
+    <div className="max-w-md mx-auto bg-white min-h-screen">
+      <div className="bg-gradient-to-r from-green-500 to-blue-500 text-white p-6 rounded-b-3xl">
+        <button
+          onClick={() => {
+            setCurrentView('home');
+            setEditingWord(null);
+            setNewWord({ japanese: '', reading: '', english: '', group: '' });
+          }}
+          className="mb-4 p-2 hover:bg-white/20 rounded-full"
+        >
+          <ArrowLeft size={20} />
+        </button>
+        <h1 className="text-2xl font-bold">{editingWord ? 'Edit Word' : 'Add New Word'}</h1>
+      </div>
+
+      <div className="p-6 space-y-6">
+        <div>
+          <label className="block text-gray-700 font-semibold mb-2">Japanese</label>
+          <input
+            type="text"
+            value={newWord.japanese}
+            onChange={(e) => setNewWord({...newWord, japanese: e.target.value})}
+            className="w-full p-4 text-2xl border-2 border-gray-300 rounded-2xl focus:border-blue-500 focus:outline-none"
+            placeholder="漢字 or ひらがな"
+          />
+        </div>
+
+        <div>
+          <label className="block text-gray-700 font-semibold mb-2">Reading (ひらがな)</label>
+          <input
+            type="text"
+            value={newWord.reading}
+            onChange={(e) => setNewWord({...newWord, reading: e.target.value})}
+            className="w-full p-4 text-xl border-2 border-gray-300 rounded-2xl focus:border-blue-500 focus:outline-none"
+            placeholder="いぬ"
+          />
+        </div>
+
+        <div>
+          <label className="block text-gray-700 font-semibold mb-2">English</label>
+          <input
+            type="text"
+            value={newWord.english}
+            onChange={(e) => setNewWord({...newWord, english: e.target.value})}
+            className="w-full p-4 text-xl border-2 border-gray-300 rounded-2xl focus:border-blue-500 focus:outline-none"
+            placeholder="dog"
+          />
+        </div>
+
+        <div>
+          <label className="block text-gray-700 font-semibold mb-2">Group</label>
+          <div className="space-y-2">
+            <select
+              value={newWord.group}
+              onChange={(e) => setNewWord({...newWord, group: e.target.value})}
+              className="w-full p-4 text-lg border-2 border-gray-300 rounded-2xl focus:border-blue-500 focus:outline-none"
+            >
+              <option value="">Select a group</option>
+              {groups.map(group => (
+                <option key={group} value={group}>{group}</option>
+              ))}
+            </select>
+            
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newGroupName}
+                onChange={(e) => setNewGroupName(e.target.value)}
+                className="flex-1 p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
+                placeholder="Or create new group"
+              />
+              <button
+                onClick={() => {
+                  if (newGroupName) {
+                    setNewWord({...newWord, group: newGroupName});
+                    setNewGroupName('');
+                  }
+                }}
+                className="px-4 py-3 bg-blue-500 text-white rounded-xl font-semibold active:scale-95 transition-transform"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={editingWord ? updateWord : addWord}
+          className="w-full bg-gradient-to-r from-green-500 to-blue-500 text-white p-4 rounded-2xl font-bold text-xl active:scale-95 transition-transform shadow-lg"
+        >
+          {editingWord ? 'Update Word' : 'Add Word'}
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderCurrentView = () => {
+    switch (currentView) {
+      case 'add': return renderAddWord();
+      case 'quiz-type-select': return renderQuizTypeSelect();
+      case 'quiz-type-random': 
+        setSelectedGroup('random');
+        setCurrentView('quiz-type-select');
+        return null;
+      case 'quiz': return renderQuiz();
+      case 'quiz-complete': return renderQuizComplete();
+      default: return renderHome();
+    }
+  };
+
+  return (
+    <div className="bg-gray-100 min-h-screen">
+      {renderCurrentView()}
+    </div>
+  );
+};
+
+export default JapaneseVocabApp;
