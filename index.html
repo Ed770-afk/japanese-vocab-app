@@ -5,47 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Japanese Vocab App</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- PWA Meta Tags -->
     <meta name="description" content="Learn Japanese vocabulary with flashcards, multiple choice, and writing exercises">
     <meta name="theme-color" content="#3B82F6">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Japanese Vocab">
-    
-    <!-- Icons and manifest will be created dynamically -->
 </head>
 <body class="bg-gray-100">
     <div id="app" class="max-w-md mx-auto bg-white min-h-screen">
-        <!-- Loading will be replaced by JavaScript -->
         <div class="p-8 text-center">
             <div class="text-2xl">Loading...</div>
         </div>
     </div>
 
     <script>
-        // Create proper PNG icons from canvas
         function createIcon(size) {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             canvas.width = size;
             canvas.height = size;
             
-            // Create gradient background
             const gradient = ctx.createLinearGradient(0, 0, size, size);
             gradient.addColorStop(0, '#3B82F6');
             gradient.addColorStop(1, '#8B35FF');
             
-            // Draw rounded rectangle
             const radius = size * 0.125;
             ctx.fillStyle = gradient;
             ctx.beginPath();
             ctx.roundRect(0, 0, size, size, radius);
             ctx.fill();
             
-            // Draw Japanese character
             ctx.fillStyle = 'white';
-            ctx.font = `bold ${size * 0.3}px system-ui`;
+            ctx.font = 'bold ' + (size * 0.3) + 'px system-ui';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText('日', size/2, size/2);
@@ -53,156 +44,39 @@
             return canvas.toDataURL('image/png');
         }
         
-        // Create icons
         const icon192 = createIcon(192);
         const icon512 = createIcon(512);
         
-        // Create proper manifest
         const manifest = {
             "id": "japanese-vocab-app",
             "name": "Japanese Vocabulary App",
             "short_name": "JP Vocab",
-            "description": "Learn Japanese vocabulary with flashcards, multiple choice, and writing exercises",
+            "description": "Learn Japanese vocabulary",
             "start_url": "./",
             "display": "standalone",
             "background_color": "#ffffff",
             "theme_color": "#3B82F6",
             "orientation": "portrait-primary",
-            "categories": ["education", "productivity"],
-            "lang": "en-US",
-            "scope": "./",
             "icons": [
-                {
-                    "src": icon192,
-                    "sizes": "192x192",
-                    "type": "image/png",
-                    "purpose": "any maskable"
-                },
-                {
-                    "src": icon512,
-                    "sizes": "512x512",
-                    "type": "image/png"
-                }
-            ],
-            "screenshots": [
-                {
-                    "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAXcAAAKbCAYAAAA7sVlkAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAxkSURBVHic7d1frNd1HcfxjynQVpvVWJhZzJUaZptryxZzIxcOHLjARRyVWrCFKysRrUVhxDZdCBpzK8pKFTCrQRJbC2HlgiHEaOuyIoUkxLZatCQJ2TZXdmFC08GBC1/f3/l+f/v9nt4vPB6Xn/f3+/l8X5/zPafn8znn+z2z2WwWALT8zdQBAGifcgdoUO4ADcodYIjZbPY/1fJZZs6TYoEAAAAASUVORK5CYII=",
-                    "sizes": "375x667",
-                    "type": "image/png",
-                    "form_factor": "narrow"
-                },
-                {
-                    "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAwAAAAJYCAYAAADjlOJGAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAxkSU=",
-                    "sizes": "640x480",
-                    "type": "image/png",
-                    "form_factor": "wide"
-                }
-            ],
-            "related_applications": [],
-            "prefer_related_applications": false
+                {"src": icon192, "sizes": "192x192", "type": "image/png"},
+                {"src": icon512, "sizes": "512x512", "type": "image/png"}
+            ]
         };
 
-        // Create and inject manifest blob URL
         const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
         const manifestURL = URL.createObjectURL(manifestBlob);
         
-        // Create manifest link
         const manifestLink = document.createElement('link');
         manifestLink.rel = 'manifest';
         manifestLink.href = manifestURL;
         document.head.appendChild(manifestLink);
         
-        // Create favicon links
         const favicon = document.createElement('link');
         favicon.rel = 'icon';
         favicon.type = 'image/png';
-        favicon.sizes = '192x192';
         favicon.href = icon192;
         document.head.appendChild(favicon);
-        
-        const appleIcon = document.createElement('link');
-        appleIcon.rel = 'apple-touch-icon';
-        appleIcon.href = icon192;
-        document.head.appendChild(appleIcon);
-        
-        // Register Enhanced Service Worker
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-                navigator.serviceWorker.register('data:application/javascript;base64,' + btoa(`
-                    const CACHE_NAME = 'japanese-vocab-v2';
-                    const urlsToCache = [
-                        './',
-                        './index.html',
-                        'https://cdn.tailwindcss.com'
-                    ];
 
-                    self.addEventListener('install', function(event) {
-                        event.waitUntil(
-                            caches.open(CACHE_NAME)
-                                .then(function(cache) {
-                                    console.log('Opened cache');
-                                    return cache.addAll(urlsToCache);
-                                })
-                        );
-                        self.skipWaiting();
-                    });
-
-                    self.addEventListener('activate', function(event) {
-                        event.waitUntil(
-                            caches.keys().then(function(cacheNames) {
-                                return Promise.all(
-                                    cacheNames.map(function(cacheName) {
-                                        if (cacheName !== CACHE_NAME) {
-                                            return caches.delete(cacheName);
-                                        }
-                                    })
-                                );
-                            })
-                        );
-                        self.clients.claim();
-                    });
-
-                    self.addEventListener('fetch', function(event) {
-                        event.respondWith(
-                            caches.match(event.request)
-                                .then(function(response) {
-                                    // Cache hit - return response
-                                    if (response) {
-                                        return response;
-                                    }
-                                    
-                                    return fetch(event.request).then(
-                                        function(response) {
-                                            // Check if we received a valid response
-                                            if(!response || response.status !== 200 || response.type !== 'basic') {
-                                                return response;
-                                            }
-                                            
-                                            // Clone the response
-                                            var responseToCache = response.clone();
-                                            
-                                            caches.open(CACHE_NAME)
-                                                .then(function(cache) {
-                                                    cache.put(event.request, responseToCache);
-                                                });
-                                            
-                                            return response;
-                                        }
-                                    );
-                                })
-                        );
-                    });
-                `))
-                .then(function(registration) {
-                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                })
-                .catch(function(error) {
-                    console.log('ServiceWorker registration failed: ', error);
-                });
-            });
-        }
-
-        // Simple vanilla JavaScript implementation
         class JapaneseVocabApp {
             constructor() {
                 this.words = [
@@ -234,10 +108,9 @@
                 this.render();
             }
 
-            // Memory-based storage (since localStorage isn't available)
             saveData() {
                 try {
-                    this.savedWords = [...this.words];
+                    localStorage.setItem('japaneseVocabWords', JSON.stringify(this.words));
                 } catch (e) {
                     console.log('Storage not available');
                 }
@@ -245,8 +118,9 @@
 
             loadData() {
                 try {
-                    if (this.savedWords) {
-                        this.words = [...this.savedWords];
+                    const saved = localStorage.getItem('japaneseVocabWords');
+                    if (saved) {
+                        this.words = JSON.parse(saved);
                     }
                 } catch (e) {
                     console.log('Storage not available');
@@ -264,6 +138,9 @@
                         break;
                     case 'add':
                         this.renderAddWord();
+                        break;
+                    case 'import':
+                        this.renderImport();
                         break;
                     case 'quiz-select':
                         this.renderQuizSelect();
@@ -299,15 +176,27 @@
                         </button>
                     </div>
 
+                    <div class="p-4 grid grid-cols-2 gap-4">
+                        <button onclick="app.exportWords()" class="bg-purple-500 text-white p-4 rounded-2xl flex flex-col items-center gap-2 shadow-lg active:scale-95 transition-transform">
+                            <span class="text-2xl">📤</span>
+                            <span class="font-semibold">Export</span>
+                        </button>
+                        
+                        <button onclick="app.showImport()" class="bg-orange-500 text-white p-4 rounded-2xl flex flex-col items-center gap-2 shadow-lg active:scale-95 transition-transform">
+                            <span class="text-2xl">📥</span>
+                            <span class="font-semibold">Import</span>
+                        </button>
+                    </div>
+
                     <div class="p-4">
-                        <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
-                            <span>👥</span>
-                            Study Groups
-                        </h2>
+                        <h2 class="text-xl font-bold mb-4">Study Groups</h2>
                         <div class="grid gap-3">
                             ${groups.map(group => {
                                 const groupWords = this.words.filter(word => word.group === group);
-                                const emoji = group === 'Animals' ? '🐱' : group === 'Basic' ? '📚' : '🏃‍♂️';
+                                let groupEmoji = '📚';
+                                if (group === 'Animals') groupEmoji = '🐱';
+                                if (group.includes('Verbs')) groupEmoji = '🏃‍♂️';
+                                
                                 return `
                                     <button onclick="app.showQuizSelect('${group}')" class="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-2xl text-left hover:from-blue-50 hover:to-purple-50 transition-colors border border-gray-200">
                                         <div class="flex justify-between items-center">
@@ -315,7 +204,7 @@
                                                 <h3 class="font-bold text-gray-800 text-lg">${group}</h3>
                                                 <p class="text-gray-600">${groupWords.length} words</p>
                                             </div>
-                                            <div class="text-2xl">${emoji}</div>
+                                            <div class="text-2xl">${groupEmoji}</div>
                                         </div>
                                     </button>
                                 `;
@@ -324,10 +213,7 @@
                     </div>
 
                     <div class="p-4">
-                        <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
-                            <span>📚</span>
-                            Your Words (${this.words.length})
-                        </h2>
+                        <h2 class="text-xl font-bold mb-4">Your Words (${this.words.length})</h2>
                         <div class="space-y-3 max-h-96 overflow-y-auto">
                             ${this.words.slice(-5).reverse().map(word => `
                                 <div class="bg-gray-50 p-4 rounded-2xl">
@@ -365,7 +251,7 @@
                         </div>
 
                         <div>
-                            <label class="block text-gray-700 font-semibold mb-2">Reading (ひらがな)</label>
+                            <label class="block text-gray-700 font-semibold mb-2">Reading</label>
                             <input type="text" id="reading" value="${this.newWord.reading}" class="w-full p-4 text-xl border-2 border-gray-300 rounded-2xl focus:border-blue-500 focus:outline-none" placeholder="いぬ">
                         </div>
 
@@ -393,12 +279,45 @@
                 `;
             }
 
+            renderImport() {
+                this.app.innerHTML = `
+                    <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white p-6 rounded-b-3xl">
+                        <button onclick="app.showHome()" class="mb-4 p-2 hover:bg-white/20 rounded-full">← Back</button>
+                        <h1 class="text-2xl font-bold">Import Words</h1>
+                    </div>
+
+                    <div class="p-6 space-y-6">
+                        <div>
+                            <h2 class="text-lg font-bold mb-3">Import from File</h2>
+                            <input type="file" id="importFile" accept=".json,.txt" class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none">
+                            <button onclick="app.importFromFile()" class="w-full mt-2 bg-blue-500 text-white p-3 rounded-xl font-semibold active:scale-95 transition-transform">Import File</button>
+                        </div>
+
+                        <div class="border-t pt-6">
+                            <h2 class="text-lg font-bold mb-3">Import from Text</h2>
+                            <textarea id="importText" rows="6" class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none" placeholder="Format: 犬（いぬ） - dog"></textarea>
+                            <div class="flex gap-2 mt-2">
+                                <input type="text" id="importGroup" value="Imported" class="flex-1 p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none" placeholder="Group name">
+                                <button onclick="app.importFromText()" class="px-6 py-3 bg-green-500 text-white rounded-xl font-semibold active:scale-95 transition-transform">Import</button>
+                            </div>
+                        </div>
+
+                        <div class="border-t pt-6">
+                            <h2 class="text-lg font-bold mb-3">Quick Import: Genki I Lesson 1</h2>
+                            <button onclick="app.importGenkiLesson1()" class="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 rounded-xl font-semibold active:scale-95 transition-transform">
+                                Import 48 Genki I Words
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
             renderQuizSelect() {
                 this.app.innerHTML = `
                     <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-b-3xl">
                         <button onclick="app.showHome()" class="mb-4 p-2 hover:bg-white/20 rounded-full">← Back</button>
                         <h1 class="text-2xl font-bold">Choose Quiz Type</h1>
-                        <p class="opacity-90 mt-2">${this.selectedGroup === 'random' ? 'Random words from all groups' : `Group: ${this.selectedGroup}`}</p>
+                        <p class="opacity-90 mt-2">${this.selectedGroup === 'random' ? 'Random words from all groups' : 'Group: ' + this.selectedGroup}</p>
                     </div>
 
                     <div class="p-6 space-y-4">
@@ -439,27 +358,45 @@
                 if (this.studyWords.length === 0) return;
                 
                 const currentWord = this.studyWords[this.currentWordIndex];
-                const quizTypeEmoji = this.quizType === 'flashcard' ? '🔄' : this.quizType === 'multiple-choice' ? '🎯' : '✍️';
-                const quizTypeName = this.quizType === 'flashcard' ? 'Flashcard' : this.quizType === 'multiple-choice' ? 'Multiple Choice' : 'Write Translation';
+                let quizTypeEmoji = '📖';
+                let quizTypeName = 'Flashcard';
+                
+                if (this.quizType === 'multiple-choice') {
+                    quizTypeEmoji = '🎯';
+                    quizTypeName = 'Multiple Choice';
+                } else if (this.quizType === 'write-translation') {
+                    quizTypeEmoji = '✍️';
+                    quizTypeName = 'Write Translation';
+                }
 
                 let quizContent = '';
                 
                 if (this.quizType === 'flashcard') {
                     if (!this.showAnswer) {
                         quizContent = `
-                            <button onclick="app.showAnswer()" class="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white p-4 rounded-2xl font-bold text-xl active:scale-95 transition-transform">
-                                Show Answer
-                            </button>
+                            <div class="space-y-6">
+                                <div class="text-center">
+                                    <p class="text-gray-600 text-lg mb-4">What does this mean?</p>
+                                    <div class="bg-blue-50 p-6 rounded-3xl mb-6">
+                                        <div class="text-xl text-blue-800">${currentWord.reading}</div>
+                                    </div>
+                                </div>
+                                <button onclick="app.showAnswerFlashcard()" class="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white p-4 rounded-2xl font-bold text-xl active:scale-95 transition-transform">
+                                    Show Answer
+                                </button>
+                            </div>
                         `;
                     } else {
                         quizContent = `
-                            <div class="space-y-4">
-                                <div class="bg-blue-50 p-4 rounded-2xl text-center">
-                                    <div class="text-2xl font-bold text-blue-800">${currentWord.english}</div>
+                            <div class="space-y-6">
+                                <div class="bg-green-50 p-6 rounded-3xl text-center">
+                                    <div class="text-2xl font-bold text-green-800 mb-2">${currentWord.english}</div>
+                                    <div class="text-lg text-green-600">${currentWord.reading}</div>
                                 </div>
+                                <p class="text-center text-gray-600">Did you get it right?</p>
                                 <div class="grid grid-cols-2 gap-3">
-                                    <button onclick="app.markIncorrect()" class="bg-red-500 text-white p-3 rounded-xl font-semibold active:scale-95 transition-transform">❌ Incorrect</button>
-                                    <button onclick="app.markCorrect()" class="bg-green-500 text-white p-3 rounded-xl font-semibold active:scale-95 transition-transform">✅ Correct</button>
+                                    <button onclick="app.markIncorrect()" class="bg-red-500 text-white p-4 rounded-xl font-semibold active:scale-95 transition-transform">❌ Incorrect</button>
+                                    <button onclick="app.markCorrect()" class="bg-green-500 text-white p-4 rounded-xl font-semibold active:scale-95 transition-transform">✅ Correct</button>
                                 </div>
                             </div>
                         `;
@@ -467,19 +404,25 @@
                 } else if (this.quizType === 'multiple-choice') {
                     if (!this.showResult) {
                         quizContent = `
-                            <p class="text-center text-gray-600 mb-4">Choose the correct translation:</p>
-                            ${this.currentChoices.map((choice, index) => `
-                                <button onclick="app.checkAnswer('${choice.english.replace(/'/g, "\\'")}')" class="w-full bg-gray-100 hover:bg-gray-200 p-4 rounded-xl text-left font-medium active:scale-95 transition-transform mb-3">
-                                    ${choice.english}
-                                </button>
-                            `).join('')}
+                            <div class="space-y-4">
+                                <p class="text-center text-gray-600 mb-4">Choose the correct translation:</p>
+                                ${this.currentChoices.map(choice => `
+                                    <button onclick="app.checkAnswer('${choice.english.replace(/'/g, "\\\'")}')" class="w-full bg-gray-100 hover:bg-gray-200 p-4 rounded-xl text-left font-medium active:scale-95 transition-transform">
+                                        ${choice.english}
+                                    </button>
+                                `).join('')}
+                            </div>
                         `;
                     } else {
+                        const resultClass = this.isCorrect ? 'bg-green-100' : 'bg-red-100';
+                        const resultTextClass = this.isCorrect ? 'text-green-800' : 'text-red-800';
+                        const resultText = this.isCorrect ? '✅ Correct!' : '❌ Incorrect';
+                        
                         quizContent = `
                             <div class="space-y-4">
-                                <div class="p-4 rounded-2xl text-center ${this.isCorrect ? 'bg-green-100' : 'bg-red-100'}">
-                                    <div class="text-xl font-bold ${this.isCorrect ? 'text-green-800' : 'text-red-800'}">
-                                        ${this.isCorrect ? '✅ Correct!' : '❌ Incorrect'}
+                                <div class="p-4 rounded-2xl text-center ${resultClass}">
+                                    <div class="text-xl font-bold ${resultTextClass}">
+                                        ${resultText}
                                     </div>
                                     <div class="text-lg mt-2 text-gray-700">
                                         Answer: <strong>${currentWord.english}</strong>
@@ -492,16 +435,22 @@
                 } else if (this.quizType === 'write-translation') {
                     if (!this.showResult) {
                         quizContent = `
-                            <p class="text-center text-gray-600 mb-4">Write the English translation:</p>
-                            <input type="text" id="userAnswer" value="${this.userAnswer}" class="w-full p-4 text-lg border-2 border-gray-300 rounded-2xl focus:border-blue-500 focus:outline-none mb-4" placeholder="Type your answer here...">
-                            <button onclick="app.checkWrittenAnswer()" class="w-full bg-blue-500 text-white p-3 rounded-xl font-semibold active:scale-95 transition-transform">Check Answer</button>
+                            <div class="space-y-4">
+                                <p class="text-center text-gray-600 mb-4">Write the English translation:</p>
+                                <input type="text" id="userAnswer" value="${this.userAnswer}" class="w-full p-4 text-lg border-2 border-gray-300 rounded-2xl focus:border-blue-500 focus:outline-none mb-4" placeholder="Type your answer here..." onkeypress="if(event.key==='Enter') app.checkWrittenAnswer()">
+                                <button onclick="app.checkWrittenAnswer()" class="w-full bg-blue-500 text-white p-3 rounded-xl font-semibold active:scale-95 transition-transform">Check Answer</button>
+                            </div>
                         `;
                     } else {
+                        const resultClass = this.isCorrect ? 'bg-green-100' : 'bg-red-100';
+                        const resultTextClass = this.isCorrect ? 'text-green-800' : 'text-red-800';
+                        const resultText = this.isCorrect ? '✅ Correct!' : '❌ Incorrect';
+                        
                         quizContent = `
                             <div class="space-y-4">
-                                <div class="p-4 rounded-2xl text-center ${this.isCorrect ? 'bg-green-100' : 'bg-red-100'}">
-                                    <div class="text-xl font-bold ${this.isCorrect ? 'text-green-800' : 'text-red-800'}">
-                                        ${this.isCorrect ? '✅ Correct!' : '❌ Incorrect'}
+                                <div class="p-4 rounded-2xl text-center ${resultClass}">
+                                    <div class="text-xl font-bold ${resultTextClass}">
+                                        ${resultText}
                                     </div>
                                     <div class="text-lg mt-2 text-gray-700">
                                         Your answer: <strong>${this.userAnswer}</strong>
@@ -536,17 +485,36 @@
                     <div class="p-6">
                         <div class="bg-gray-50 p-6 rounded-3xl mb-6 text-center">
                             <div class="text-5xl font-bold text-gray-800 mb-3">${currentWord.japanese}</div>
-                            <div class="text-2xl text-gray-600">${currentWord.reading}</div>
+                            ${this.quizType !== 'flashcard' ? '<div class="text-2xl text-gray-600">' + currentWord.reading + '</div>' : ''}
                         </div>
                         ${quizContent}
                     </div>
                 `;
+
+                if (this.quizType === 'write-translation' && !this.showResult) {
+                    setTimeout(() => {
+                        const input = document.getElementById('userAnswer');
+                        if (input) input.focus();
+                    }, 100);
+                }
             }
 
             renderQuizComplete() {
-                const percentage = this.score.total > 0 ? Math.round((this.score.correct / this.score.total) * 100) : 0;
-                const emoji = percentage >= 80 ? '🌟' : percentage >= 60 ? '👍' : '📚';
-                const message = percentage >= 80 ? 'Excellent work!' : percentage >= 60 ? 'Good job!' : 'Keep practicing!';
+                let percentage = 0;
+                if (this.score.total > 0) {
+                    percentage = Math.round((this.score.correct / this.score.total) * 100);
+                }
+                
+                let resultEmoji = '📚';
+                let message = 'Keep practicing!';
+                
+                if (percentage >= 80) {
+                    resultEmoji = '🌟';
+                    message = 'Excellent work!';
+                } else if (percentage >= 60) {
+                    resultEmoji = '👍';
+                    message = 'Good job!';
+                }
 
                 this.app.innerHTML = `
                     <div class="bg-gradient-to-r from-green-500 to-blue-500 text-white p-6 rounded-b-3xl">
@@ -555,7 +523,7 @@
 
                     <div class="p-8 text-center">
                         <div class="bg-gray-50 p-8 rounded-3xl mb-8">
-                            <div class="text-6xl mb-4">${emoji}</div>
+                            <div class="text-6xl mb-4">${resultEmoji}</div>
                             <div class="text-4xl font-bold text-gray-800 mb-2">${percentage}%</div>
                             <div class="text-xl text-gray-600 mb-4">${this.score.correct} out of ${this.score.total} correct</div>
                             <div class="text-lg text-gray-700">${message}</div>
@@ -568,7 +536,6 @@
                 `;
             }
 
-            // Navigation methods
             showHome() {
                 this.currentView = 'home';
                 this.render();
@@ -587,7 +554,193 @@
                 this.render();
             }
 
-            // Word management methods
+            showImport() {
+                this.currentView = 'import';
+                this.render();
+            }
+
+            exportWords() {
+                const data = {
+                    words: this.words,
+                    exportDate: new Date().toISOString(),
+                    appVersion: 'Japanese Vocab App v1.0'
+                };
+                
+                const jsonString = JSON.stringify(data, null, 2);
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'japanese-vocab-' + new Date().toISOString().split('T')[0] + '.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            importFromFile() {
+                const fileInput = document.getElementById('importFile');
+                const file = fileInput.files[0];
+                
+                if (!file) {
+                    alert('Please select a file first');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        if (data.words && Array.isArray(data.words)) {
+                            const importedCount = data.words.length;
+                            data.words.forEach(word => {
+                                if (!word.id) word.id = Date.now() + Math.random();
+                            });
+                            this.words = [...this.words, ...data.words];
+                            this.saveData();
+                            alert('Successfully imported ' + importedCount + ' words!');
+                            this.showHome();
+                        } else {
+                            alert('Invalid file format. Please use a valid export file.');
+                        }
+                    } catch (error) {
+                        alert('Error reading file. Please check the file format.');
+                    }
+                };
+                reader.readAsText(file);
+            }
+
+            importFromText() {
+                const text = document.getElementById('importText').value.trim();
+                const group = document.getElementById('importGroup').value.trim() || 'Imported';
+                
+                if (!text) {
+                    alert('Please enter some text to import');
+                    return;
+                }
+                
+                const lines = text.split('\n').filter(line => line.trim());
+                const newWords = [];
+                
+                lines.forEach(line => {
+                    line = line.trim();
+                    if (!line) return;
+                    
+                    let match = line.match(/(.+?)（(.+?)）\s*[–-]\s*(.+)/);
+                    if (match) {
+                        const japanese = match[1].trim();
+                        const reading = match[2].trim();
+                        const english = match[3].trim();
+                        newWords.push({
+                            id: Date.now() + Math.random(),
+                            japanese: japanese,
+                            reading: reading,
+                            english: english,
+                            group: group
+                        });
+                        return;
+                    }
+                    
+                    match = line.match(/(.+?)\s*\|\s*(.+?)\s*\|\s*(.+)/);
+                    if (match) {
+                        const japanese = match[1].trim();
+                        const reading = match[2].trim();
+                        const english = match[3].trim();
+                        newWords.push({
+                            id: Date.now() + Math.random(),
+                            japanese: japanese,
+                            reading: reading,
+                            english: english,
+                            group: group
+                        });
+                        return;
+                    }
+                    
+                    match = line.match(/(.+?)\s*[–-]\s*(.+)/);
+                    if (match) {
+                        const japanese = match[1].trim();
+                        const english = match[2].trim();
+                        newWords.push({
+                            id: Date.now() + Math.random(),
+                            japanese: japanese,
+                            reading: japanese,
+                            english: english,
+                            group: group
+                        });
+                    }
+                });
+                
+                if (newWords.length > 0) {
+                    this.words = [...this.words, ...newWords];
+                    this.saveData();
+                    alert('Successfully imported ' + newWords.length + ' words!');
+                    this.showHome();
+                } else {
+                    alert('No valid words found. Please check the format.');
+                }
+            }
+
+            importGenkiLesson1() {
+                const genkiWords = [
+                    { japanese: '私', reading: 'わたし', english: 'I' },
+                    { japanese: 'あの人', reading: 'あのひと', english: 'that person' },
+                    { japanese: '先生', reading: 'せんせい', english: 'teacher; professor' },
+                    { japanese: '学生', reading: 'がくせい', english: 'student' },
+                    { japanese: '留学生', reading: 'りゅうがくせい', english: 'international student' },
+                    { japanese: '一', reading: 'いち', english: 'one' },
+                    { japanese: '二', reading: 'に', english: 'two' },
+                    { japanese: '三', reading: 'さん', english: 'three' },
+                    { japanese: '四', reading: 'し/よん', english: 'four' },
+                    { japanese: '五', reading: 'ご', english: 'five' },
+                    { japanese: '六', reading: 'ろく', english: 'six' },
+                    { japanese: '七', reading: 'しち/なな', english: 'seven' },
+                    { japanese: '八', reading: 'はち', english: 'eight' },
+                    { japanese: '九', reading: 'きゅう/く', english: 'nine' },
+                    { japanese: '十', reading: 'じゅう', english: 'ten' },
+                    { japanese: 'はい', reading: 'はい', english: 'yes' },
+                    { japanese: 'いいえ', reading: 'いいえ', english: 'no' },
+                    { japanese: 'そうです', reading: 'そうです', english: 'that is right' },
+                    { japanese: 'そうですか', reading: 'そうですか', english: 'I see; is that so' },
+                    { japanese: 'おはよう', reading: 'おはよう', english: 'good morning (casual)' },
+                    { japanese: 'おはようございます', reading: 'おはようございます', english: 'good morning (polite)' },
+                    { japanese: 'こんにちは', reading: 'こんにちは', english: 'good afternoon' },
+                    { japanese: 'こんばんは', reading: 'こんばんは', english: 'good evening' },
+                    { japanese: 'さようなら', reading: 'さようなら', english: 'good-bye' },
+                    { japanese: 'ありがとう', reading: 'ありがとう', english: 'thank you' },
+                    { japanese: 'ありがとうございます', reading: 'ありがとうございます', english: 'thank you (polite)' },
+                    { japanese: 'すみません', reading: 'すみません', english: 'excuse me; I am sorry' },
+                    { japanese: '学校', reading: 'がっこう', english: 'school' },
+                    { japanese: '大学', reading: 'だいがく', english: 'college; university' },
+                    { japanese: '専攻', reading: 'せんこう', english: 'major' },
+                    { japanese: '経済', reading: 'けいざい', english: 'economics' },
+                    { japanese: '国際関係', reading: 'こくさいかんけい', english: 'international relations' },
+                    { japanese: 'コンピューター', reading: 'コンピューター', english: 'computer' },
+                    { japanese: 'ビジネス', reading: 'ビジネス', english: 'business' },
+                    { japanese: '歴史', reading: 'れきし', english: 'history' },
+                    { japanese: '今', reading: 'いま', english: 'now' },
+                    { japanese: '午前', reading: 'ごぜん', english: 'A.M.' },
+                    { japanese: '午後', reading: 'ごご', english: 'P.M.' },
+                    { japanese: 'アメリカ', reading: 'アメリカ', english: 'U.S.A.' },
+                    { japanese: 'イギリス', reading: 'イギリス', english: 'Britain' },
+                    { japanese: 'オーストラリア', reading: 'オーストラリア', english: 'Australia' },
+                    { japanese: '韓国', reading: 'かんこく', english: 'Korea' },
+                    { japanese: '中国', reading: 'ちゅうごく', english: 'China' },
+                    { japanese: '日本', reading: 'にほん/にっぽん', english: 'Japan' }
+                ];
+
+                const wordsWithIds = genkiWords.map(word => ({
+                    ...word,
+                    id: Date.now() + Math.random(),
+                    group: 'Genki I - Lesson 1'
+                }));
+
+                this.words = [...this.words, ...wordsWithIds];
+                this.saveData();
+                alert('Successfully imported ' + genkiWords.length + ' words from Genki I Lesson 1!');
+                this.showHome();
+            }
+
             saveWord() {
                 const japanese = document.getElementById('japanese').value.trim();
                 const reading = document.getElementById('reading').value.trim();
@@ -633,7 +786,6 @@
                 }
             }
 
-            // Quiz methods
             startQuiz(type) {
                 this.quizType = type;
                 this.currentWordIndex = 0;
@@ -670,7 +822,7 @@
                 this.currentChoices = choices.sort(() => Math.random() - 0.5);
             }
 
-            showAnswer() {
+            showAnswerFlashcard() {
                 this.showAnswer = true;
                 this.render();
             }
@@ -726,7 +878,6 @@
             }
         }
 
-        // Initialize the app
         const app = new JapaneseVocabApp();
     </script>
 </body>
